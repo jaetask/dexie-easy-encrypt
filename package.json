@@ -1,0 +1,37 @@
+{
+  "name": "dexie-easy-encrypt",
+  "version": "0.0.1",
+  "description": "Simplified encryption middleware for dexie",
+  "main": "dist/index.js",
+  "files": [
+    "dist/index.js"
+  ],
+  "scripts": {
+    "test": "jest --watch",
+    "test-ci": "jest",
+    "build": "rollup index.js --format commonjs --file dist/index.js",
+    "format": "prettier index.js README.md --write"
+  },
+  "keywords": [
+    "dexie"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-eslint": "^10.0.3",
+    "babel-jest": "^24.9.0",
+    "dexie": "^2.0.4",
+    "dexie-export-import": "^1.0.0-beta.13",
+    "eslint": "^6.3.0",
+    "fake-indexeddb": "^2.1.1",
+    "jest": "^24.9.0",
+    "jest-extended": "^0.11.2",
+    "prettier": "^1.18.2",
+    "rollup": "^1.20.3"
+  },
+  "peerDependencies": {
+    "dexie": "^2.0.4 | ^3.0.0"
+  },
+  "author": "Jae Task",
+  "license": "ISC"
+}
