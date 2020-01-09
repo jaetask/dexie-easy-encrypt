@@ -7,6 +7,12 @@ import {
   setupHooks,
   makeError,
   ERROR_ENCRYPTION_TABLE_NOT_FOUND,
+  selectTableScenario,
+  SCENARIO_1,
+  SCENARIO_2,
+  SCENARIO_3,
+  SCENARIO_4,
+  encryptObject,
 } from './utils';
 
 const Promise = Dexie.Promise;
@@ -30,24 +36,41 @@ const middleware = async ({ db, encryption = null, tables = [], schema = null })
       settingsTable
         .toCollection()
         .last()
-        .then(oldSettings => {
-          console.log('oldSettings', oldSettings);
-          // loop through the tables, checking if any are added or removed..
-          Promise.resolve().then(() => {
-            return Promise.all(
+        .then(previousSettings => {
+          const previousTables =
+            previousSettings && Array.isArray(previousSettings.tables)
+              ? previousSettings.tables
+              : [];
+
+          Promise.resolve().then(() =>
+            Promise.all(
               db.tables.map(table => {
-                // ignore our encryption settings table
-                if (table.name === ENCRYPTION_SETTINGS_TABLE) {
-                  return Promise.resolve();
+                const scenario = selectTableScenario(table, tables, previousTables);
+
+                console.log('scenario', scenario);
+                switch (scenario) {
+                  case SCENARIO_2: {
+                    return table
+                      .toCollection()
+                      .modify(function(entity, ref) {
+                        ref.value = encryptObject(table, entity, encryption.encrypt(entity));
+                        return true;
+                      })
+                      .then(() => setupHooks(table));
+                  }
+                  case SCENARIO_3: {
+                    // decrypt current data..
+                    break;
+                  }
+                  case SCENARIO_4: {
+                    setupHooks(table);
+                    break;
+                  }
                 }
-                // if we should be encrypting
-                if (tables.includes(table.name)) {
-                  setupHooks(table);
-                  return Promise.resolve();
-                }
+                return Promise.resolve();
               })
-            );
-          });
+            )
+          );
         })
         .then(() => settingsTable.clear())
         .then(() =>
