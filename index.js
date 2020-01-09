@@ -13,7 +13,7 @@ import {
   SCENARIO_3,
   SCENARIO_4,
   encryptObject,
-} from './utils';
+} from './utils/utils';
 
 const Promise = Dexie.Promise;
 
@@ -29,7 +29,6 @@ const middleware = async ({ db, encryption = null, tables = [], schema = null })
   overrideParseStoresSpec(db);
   await isDatabaseAlreadyOpen(db);
 
-  console.log('tables', tables);
   db.on('ready', async () => {
     return Promise.resolve().then(async () => {
       const settingsTable = await getEncryptionSettingsTable(db);
@@ -47,23 +46,22 @@ const middleware = async ({ db, encryption = null, tables = [], schema = null })
               db.tables.map(table => {
                 const scenario = selectTableScenario(table, tables, previousTables);
 
-                console.log('scenario', scenario);
                 switch (scenario) {
                   case SCENARIO_2: {
                     return table
                       .toCollection()
                       .modify(function(entity, ref) {
-                        ref.value = encryptObject(table, entity, encryption.encrypt(entity));
+                        ref.value = encryptObject(table, entity, encryption);
                         return true;
                       })
-                      .then(() => setupHooks(table));
+                      .then(() => setupHooks(table, encryption));
                   }
                   case SCENARIO_3: {
                     // decrypt current data..
                     break;
                   }
                   case SCENARIO_4: {
-                    setupHooks(table);
+                    setupHooks(table, encryption);
                     break;
                   }
                 }

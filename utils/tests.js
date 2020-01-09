@@ -32,3 +32,5 @@ export const clearAllTables = async db =>
       return table.clear();
     })
   );
+
+export const clone = obj => Object.assign({}, obj);

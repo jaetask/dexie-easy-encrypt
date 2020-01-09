@@ -1,9 +1,12 @@
-// our encryption library wrapper
+const sjcl = require('sjcl');
+
+const password = 'PuttingPasswordsInCodeIsATerribleIdeaButThisIsADemo!DoNotDoThisAtHome!!!';
+
 export const encryption = {
-  encrypt: async values => {
-    return values;
+  encrypt: values => {
+    return sjcl.encrypt(password, JSON.stringify(values));
   },
-  decrypt: async data => {
-    return data;
+  decrypt: data => {
+    return JSON.parse(sjcl.decrypt(password, data));
   },
 };

@@ -60,7 +60,7 @@ export const getEncryptionSettingsTable = async db => {
  * @param table
  * @param encryption
  */
-export const setupHooks = (table, encryption) => {
+export const setupHooks = async (table, encryption) => {
   table.hook('creating', (primKey, obj) => {
     encryptObject(table, obj, encryption);
   });
@@ -147,12 +147,13 @@ export const selectTableScenario = (table, tables, previousTables) => {
  * Handles the transformation of the passed entity into what will actually be stored in the db
  * @param table
  * @param entity
- * @param encryptedValues
+ * @param encryption
  * @param wipeKeys
  */
-export const encryptObject = (table, entity, encryptedValues, wipeKeys = false) => {
-  const indices = table.schema.indexes.map(index => index.name);
+export const encryptObject = async (table, entity, encryption, wipeKeys = false) => {
+  const toStore = Object.assign({}, entity);
 
+  const indices = table.schema.indexes.map(index => index.name);
   Object.keys(entity).forEach(key => {
     if (key === table.schema.primKey.name || indices.includes(key)) {
       return;
@@ -166,7 +167,7 @@ export const encryptObject = (table, entity, encryptedValues, wipeKeys = false) 
     }
   });
 
-  entity[ENCRYPTED_DATA_KEY] = encryptedValues;
+  entity[ENCRYPTED_DATA_KEY] = encryption.encrypt(toStore);
 };
 
 /**
@@ -177,6 +178,7 @@ export const encryptObject = (table, entity, encryptedValues, wipeKeys = false) 
  * @returns {Promise<*>|PromiseLike<ArrayBuffer>|*}
  */
 export function decryptObject(entity, encryption, wipeKeys = false) {
+  console.log('Decrypting object', entity);
   if (entity && entity[ENCRYPTED_DATA_KEY]) {
     const result = encryption.decrypt(entity[ENCRYPTED_DATA_KEY]);
     if (wipeKeys === true) {

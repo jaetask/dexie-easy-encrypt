@@ -6,7 +6,7 @@ import {
   SCENARIO_4,
   ENCRYPTION_SETTINGS_TABLE,
   SCENARIO_5,
-} from './index';
+} from './utils';
 
 describe('processTable', () => {
   it('Scenario 1', () => {
