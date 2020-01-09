@@ -17,8 +17,12 @@
     "dexie",
     "dexiejs",
     "indexeddb",
+    "encrypt",
     "encryption",
-    "encryption/decryption"
+    "encryption/decryption",
+    "decryption",
+    "addon",
+    "plugin"
   ],
   "devDependencies": {
     "@babel/core": "^7.5.5",
