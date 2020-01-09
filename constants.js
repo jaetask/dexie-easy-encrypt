@@ -1,0 +1,9 @@
+export const ENCRYPTED_DATA_KEY = '__DATA__';
+export const ENCRYPTION_SETTINGS_TABLE = '__ENCRYPTION_SETTINGS__';
+export const ERROR_DB_ALREADY_OPEN = 'The middleware cannot be installed on an open database';
+export const ERROR_ENCRYPTION_TABLE_NOT_FOUND = "Can't find encryption table. You may need to bump the db version";
+export const SCENARIO_TABLE_ENCRYPTED_CHANGE = 'Table was previously encrypted but now is not';
+export const SCENARIO_TABLE_ENCRYPTED_NO_CHANGE = 'Table was previously encrypted and still is';
+export const SCENARIO_TABLE_IS_SETTINGS_TABLE = 'Table is encryption settings table';
+export const SCENARIO_TABLE_UNENCRYPTED_CHANGE = 'Table was previously not encrypted but now is';
+export const SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE = "Table was previously not encrypted and still isn't";

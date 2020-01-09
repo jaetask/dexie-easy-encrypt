@@ -1,15 +1,12 @@
+import * as constants from './constants';
 import Dexie from 'dexie';
 import {
   decryptObject,
   encryptObject,
-  ERROR_ENCRYPTION_TABLE_NOT_FOUND,
   getEncryptionSettingsTable,
   isDatabaseAlreadyOpen,
   makeError,
   overrideParseStoresSpec,
-  SCENARIO_TABLE_ENCRYPTED_CHANGE,
-  SCENARIO_TABLE_ENCRYPTED_NO_CHANGE,
-  SCENARIO_TABLE_UNENCRYPTED_CHANGE,
   selectTableScenario,
   setupHooks,
 } from './utils/utils';
@@ -35,16 +32,14 @@ const middleware = async ({ db, encryption = null, tables = [] }) => {
         .last()
         .then(previousSettings => {
           const previousTables =
-            previousSettings && Array.isArray(previousSettings.tables)
-              ? previousSettings.tables
-              : [];
+            previousSettings && Array.isArray(previousSettings.tables) ? previousSettings.tables : [];
 
           Promise.resolve().then(() =>
             Promise.all(
               db.tables.map(table => {
                 const scenario = selectTableScenario(table, tables, previousTables);
                 switch (scenario) {
-                  case SCENARIO_TABLE_UNENCRYPTED_CHANGE: {
+                  case constants.SCENARIO_TABLE_UNENCRYPTED_CHANGE: {
                     return table
                       .toCollection()
                       .modify(function(entity, ref) {
@@ -53,13 +48,13 @@ const middleware = async ({ db, encryption = null, tables = [] }) => {
                       })
                       .then(() => setupHooks(table, encryption));
                   }
-                  case SCENARIO_TABLE_ENCRYPTED_CHANGE: {
+                  case constants.SCENARIO_TABLE_ENCRYPTED_CHANGE: {
                     return table.toCollection().modify(function(entity, ref) {
                       ref.value = decryptObject(table, entity, encryption);
                       return true;
                     });
                   }
-                  case SCENARIO_TABLE_ENCRYPTED_NO_CHANGE: {
+                  case constants.SCENARIO_TABLE_ENCRYPTED_NO_CHANGE: {
                     setupHooks(table, encryption);
                     break;
                   }
@@ -73,7 +68,7 @@ const middleware = async ({ db, encryption = null, tables = [] }) => {
         .then(() => settingsTable.put({ tables }))
         .catch(error => {
           if (error.name === 'NotFoundError') {
-            throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
+            throw new Error(makeError(constants.ERROR_ENCRYPTION_TABLE_NOT_FOUND));
           }
           return Promise.reject(error);
         });

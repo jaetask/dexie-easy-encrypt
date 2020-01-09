@@ -5,7 +5,7 @@ import { encryption } from './utils/example-encryption';
 import { clearAllTables, clone, init } from './utils/tests';
 import Dexie from 'dexie';
 import middleware from './index';
-import { ENCRYPTED_DATA_KEY, ERROR_DB_ALREADY_OPEN } from './utils/utils';
+import { ENCRYPTED_DATA_KEY, ERROR_DB_ALREADY_OPEN } from './constants';
 
 describe('Middleware', () => {
   let db = null;

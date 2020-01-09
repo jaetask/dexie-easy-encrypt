@@ -1,17 +1,5 @@
+import * as constants from '../constants';
 import Dexie from 'dexie';
-
-export const ENCRYPTED_DATA_KEY = '__data__';
-export const ENCRYPTION_SETTINGS_TABLE = '__EncryptionSettings__';
-export const ERROR_DB_ALREADY_OPEN = 'The middleware cannot be installed on an open database';
-export const ERROR_ENCRYPTION_TABLE_NOT_FOUND =
-  "Can't find its encryption table. You may need to bump your database version";
-
-export const SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE =
-  "Table was previously not encrypted and still isn't";
-export const SCENARIO_TABLE_UNENCRYPTED_CHANGE = 'Table was previously not encrypted but now is';
-export const SCENARIO_TABLE_ENCRYPTED_CHANGE = 'Table was previously encrypted but now is not';
-export const SCENARIO_TABLE_ENCRYPTED_NO_CHANGE = 'Table was previously encrypted and still is';
-export const SCENARIO_TABLE_IS_SETTINGS_TABLE = 'Table is encryption settings table';
 
 export const makeError = err => `dexie-easy-encrypt: ${err}`;
 
@@ -19,7 +7,7 @@ export const overrideParseStoresSpec = db => {
   db.Version.prototype._parseStoresSpec = Dexie.override(
     db.Version.prototype._parseStoresSpec,
     func => (stores, dbSchema) => {
-      stores[ENCRYPTION_SETTINGS_TABLE] = '++id';
+      stores[constants.ENCRYPTION_SETTINGS_TABLE] = '++id';
       func.call(this, stores, dbSchema);
     }
   );
@@ -37,7 +25,7 @@ export const isDatabaseAlreadyOpen = db => {
     try {
       return db.version(db.verno).stores({});
     } catch (error) {
-      throw new Error(makeError(ERROR_DB_ALREADY_OPEN));
+      throw new Error(makeError(constants.ERROR_DB_ALREADY_OPEN));
     }
   }
 };
@@ -50,9 +38,9 @@ export const isDatabaseAlreadyOpen = db => {
  */
 export const getEncryptionSettingsTable = async db => {
   try {
-    return db.table(ENCRYPTION_SETTINGS_TABLE);
+    return db.table(constants.ENCRYPTION_SETTINGS_TABLE);
   } catch (error) {
-    throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
+    throw new Error(makeError(constants.ERROR_ENCRYPTION_TABLE_NOT_FOUND));
   }
 };
 
@@ -68,7 +56,7 @@ export const setupHooks = async (table, encryption) => {
 
   table.hook('updating', (modifications, primKey, obj) => {
     // do we have any modifications?
-    const modificationKeys = Object.keys(modifications).filter(x => x !== ENCRYPTED_DATA_KEY);
+    const modificationKeys = Object.keys(modifications).filter(x => x !== constants.ENCRYPTED_DATA_KEY);
     if (modificationKeys.length === 0) {
       return undefined;
     }
@@ -118,26 +106,35 @@ export const setupHooks = async (table, encryption) => {
  * @returns string|null
  */
 export const selectTableScenario = (table, tables, previousTables) => {
-  if (table.name === ENCRYPTION_SETTINGS_TABLE) {
-    return SCENARIO_TABLE_IS_SETTINGS_TABLE;
+  if (table.name === constants.ENCRYPTION_SETTINGS_TABLE) {
+    return constants.SCENARIO_TABLE_IS_SETTINGS_TABLE;
   }
   if (!previousTables.includes(table.name) && !tables.includes(table.name)) {
-    return SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE;
+    return constants.SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE;
   }
   if (!previousTables.includes(table.name) && tables.includes(table.name)) {
-    return SCENARIO_TABLE_UNENCRYPTED_CHANGE;
+    return constants.SCENARIO_TABLE_UNENCRYPTED_CHANGE;
   }
   if (previousTables.includes(table.name) && !tables.includes(table.name)) {
-    return SCENARIO_TABLE_ENCRYPTED_CHANGE;
+    return constants.SCENARIO_TABLE_ENCRYPTED_CHANGE;
   }
   if (previousTables.includes(table.name) && tables.includes(table.name)) {
-    return SCENARIO_TABLE_ENCRYPTED_NO_CHANGE;
+    return constants.SCENARIO_TABLE_ENCRYPTED_NO_CHANGE;
   }
   return null;
 };
 
 /**
  * Handles the transformation of the passed entity into what will actually be stored in the db
+ *
+ * Wipe Keys:
+ * =========
+ * To clean an object (remove its non encrypted (non index/primary-key) fields), we need to use two different
+ * methods depending on writing to the db, or modifying an object.
+ *
+ * - When writing (false), we nullify the key and delete it
+ * - When updating (true) we must set its value to undefined and the Dexie process will remove the key
+ *
  * @param table
  * @param entity
  * @param encryption
@@ -151,16 +148,18 @@ export const encryptObject = async (table, entity, encryption, wipeKeys = false)
     if (key === table.schema.primKey.name || indices.includes(key)) {
       return;
     }
-
-    if (wipeKeys === true) {
-      entity[key] = undefined;
-    } else {
+    // creating an object in db
+    if (wipeKeys === false) {
       entity[key] = null;
       delete entity[key];
     }
+    // updating the object in db
+    if (wipeKeys === true) {
+      entity[key] = undefined;
+    }
   });
 
-  entity[ENCRYPTED_DATA_KEY] = encryption.encrypt(toStore);
+  entity[constants.ENCRYPTED_DATA_KEY] = encryption.encrypt(toStore);
 };
 
 /**
@@ -172,13 +171,13 @@ export const encryptObject = async (table, entity, encryption, wipeKeys = false)
  */
 export function decryptObject(entity, encryption, wipeKeys = false) {
   console.log('Decrypting object', entity);
-  if (entity && entity[ENCRYPTED_DATA_KEY]) {
-    const result = encryption.decrypt(entity[ENCRYPTED_DATA_KEY]);
+  if (entity && entity[constants.ENCRYPTED_DATA_KEY]) {
+    const result = encryption.decrypt(entity[constants.ENCRYPTED_DATA_KEY]);
     if (wipeKeys === true) {
-      result[ENCRYPTED_DATA_KEY] = undefined;
+      result[constants.ENCRYPTED_DATA_KEY] = undefined;
     } else {
-      result[ENCRYPTED_DATA_KEY] = null;
-      delete result[ENCRYPTED_DATA_KEY];
+      result[constants.ENCRYPTED_DATA_KEY] = null;
+      delete result[constants.ENCRYPTED_DATA_KEY];
     }
     return result;
   }
