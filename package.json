@@ -35,5 +35,9 @@
     "dexie": "^2.0.4 | ^3.0.0"
   },
   "author": "Jae Task",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaetask/dexie-easy-encrypt.git"
+  }
 }
