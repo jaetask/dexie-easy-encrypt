@@ -170,7 +170,6 @@ export const encryptObject = async (table, entity, encryption, wipeKeys = false)
  * @returns {Promise<*>|PromiseLike<ArrayBuffer>|*}
  */
 export function decryptObject(entity, encryption, wipeKeys = false) {
-  console.log('Decrypting object', entity);
   if (entity && entity[constants.ENCRYPTED_DATA_KEY]) {
     const result = encryption.decrypt(entity[constants.ENCRYPTED_DATA_KEY]);
     if (wipeKeys === true) {
