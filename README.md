@@ -12,6 +12,8 @@ $ npm i -S dexie-easy-encrypt
 ```
 
 ## Advantages
+- Zero dependencies
+- Encryptor dependency injected
 - Hides all non index / primary-key fields in encrypted tables
 - Provides on the fly encrypt/decrypt of Dexie table data
 
@@ -51,7 +53,8 @@ middleware({ db, encryption, tables });
 ````
 
 
-
+## Test example
+A full example is given in the unit tests in `index.test.js`
 
 ## Caveats
 - For security, we remove any non index/primary-key fields from the passed object to be encrypted, this means that objects passed into table.add will be modified by the middleware, the middleware is not pure. please clone objects before passing to table.add.
