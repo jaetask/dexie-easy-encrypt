@@ -5,6 +5,7 @@ import { encryption } from './utils/example-encryption';
 import { clearAllTables, init } from './utils/tests';
 import Dexie from 'dexie';
 import middleware from './index';
+import { ERROR_DB_ALREADY_OPEN } from './utils';
 
 describe('Middleware', () => {
   let db = null;
@@ -39,15 +40,15 @@ describe('Middleware', () => {
   });
 });
 
-describe.only('Fails', () => {
-  it('adding middleware to open db', async () => {
+describe.skip('Fails', () => {
+  it('When adding middleware to open db', async () => {
     try {
-      const db = new Dexie('multiple-opens');
+      const db = new Dexie('open-then-add-middleware');
       db.version(1).stores({});
       await db.open();
-      await middleware(db, encryption, ['friends']);
+      await middleware({ db, encryption });
     } catch (e) {
-      expect(e.message).toMatch(/open database/);
+      expect(e.message).toMatch(ERROR_DB_ALREADY_OPEN);
     }
   });
 });

@@ -41,10 +41,24 @@ export const isDatabaseAlreadyOpen = db => {
  * @returns {void | Dexie.Table<any, any>}
  * @throws ERROR_ENCRYPTION_TABLE_NOT_FOUND
  */
-export const getEncryptionSettingsTable = db => {
+export const getEncryptionSettingsTable = async db => {
   try {
     return db.table(ENCRYPTION_SETTINGS_TABLE);
   } catch (error) {
     throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
   }
+};
+
+export const setupHooks = (table, encryption) => {
+  table.hook('creating', function(primKey, obj) {
+    console.log('Installing creating hook for', table.name);
+  });
+  table.hook('updating', function(modifications, primKey, obj) {
+    console.log('Installing updating hook for', table.name);
+    return modifications;
+  });
+  table.hook('reading', function(obj) {
+    console.log('Installing updating hook for', table.name);
+    return obj;
+  });
 };
