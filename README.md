@@ -30,24 +30,6 @@ db.version(1).stores({
 db.open();
 ```
 
-## Example
-
-[Write something here describing the sample code below. The example code SHOULD WORK!]
-
-```jsx
-import React from 'react';
-import { createThingie } from 'dexie-easy-encrypt';
-
-const Thingie = createThingie();
-
-const MyThingie = () => {
-  // Do some stuff
-
-  return <Thingie>Return some JSX</Thingie>;
-};
-
-export default MyThingie;
-```
 
 ## Encryption example
 You can use whatever encryption library you like. To do so, create a wrapper similar to this one which conforms to the required interface. The only important thing is that you pass in an object with `encrypt` and `decrypt` methods. How you choose to create a salt/password/object/library or whatever is completely up to you so that you can integrate with your already existing encryption methods.
