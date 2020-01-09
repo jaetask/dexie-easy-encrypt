@@ -69,12 +69,6 @@ middleware({ db, encryption, tables });
 ````
 
 
-## Acknowledgement
-This plugin is inspired by the awesome [dexie-encrypted](https://github.com/mark43/dexie-encrypted) plugin. 
-
-We chose to go our own path because we wanted to use a different encryption method and did not want users to be able to view our object structure. We also had some issues integrating [dexie-encrypted](https://github.com/mark43/dexie-encrypted) with cypress, due to the reliance on `typeson` and `typeson-registry`. Cypress does work on its own, but not with our [sympress](https://github.com/jaetask/sympress) plugin.
-
-However, if you require the additional features that [dexie-encrypted](https://github.com/mark43/dexie-encrypted) provides, such as whitelisting/blacklisting individual object fields per table, then we highly advise you to go that route.
 
 
 ## Caveats
@@ -85,3 +79,10 @@ However, if you require the additional features that [dexie-encrypted](https://g
 **[ISC](LICENSE)** Licensed
 
 ---
+
+## Acknowledgement
+This plugin is inspired by the awesome [dexie-encrypted](https://github.com/mark43/dexie-encrypted) plugin. 
+
+We chose to go our own path because we wanted to use a different encryption method and did not want users to be able to view our object structure. We also had some issues integrating [dexie-encrypted](https://github.com/mark43/dexie-encrypted) with cypress, due to the reliance on `typeson` and `typeson-registry`. Cypress does work on its own, but not with our [sympress](https://github.com/jaetask/sympress) plugin.
+
+However, if you require the additional features that [dexie-encrypted](https://github.com/mark43/dexie-encrypted) provides, such as whitelisting/blacklisting individual object fields per table, then we highly advise you to go that route.
