@@ -6,11 +6,12 @@ export const ERROR_DB_ALREADY_OPEN = 'The middleware cannot be installed on an o
 export const ERROR_ENCRYPTION_TABLE_NOT_FOUND =
   "Can't find its encryption table. You may need to bump your database version";
 
-export const SCENARIO_1 = "Table was not previously encrypted and still isn't";
-export const SCENARIO_2 = 'Table was not previously encrypted but now is';
-export const SCENARIO_3 = 'Table was previously encrypted but now is not';
-export const SCENARIO_4 = 'Table was previously encrypted and still is';
-export const SCENARIO_5 = 'Table is encryption settings table';
+export const SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE =
+  "Table was previously not encrypted and still isn't";
+export const SCENARIO_TABLE_UNENCRYPTED_CHANGE = 'Table was previously not encrypted but now is';
+export const SCENARIO_TABLE_ENCRYPTED_CHANGE = 'Table was previously encrypted but now is not';
+export const SCENARIO_TABLE_ENCRYPTED_NO_CHANGE = 'Table was previously encrypted and still is';
+export const SCENARIO_TABLE_IS_SETTINGS_TABLE = 'Table is encryption settings table';
 
 export const makeError = err => `dexie-easy-encrypt: ${err}`;
 
@@ -93,30 +94,23 @@ export const setupHooks = async (table, encryption) => {
 };
 
 /**
- * Tables have multiple possible scenarios, this function decides on the correct course of action
+ * Tables have multiple possible scenarios, this function decides on which one is relevant
  *
- * test driven.
- *
- * Scenario 1
- * ==========
+ * SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE
+ * ====================================
  * Table was not previously encrypted and still isn't
- * - do nothing
  *
- * Scenario 2
+ * SCENARIO_TABLE_UNENCRYPTED_CHANGE
  * ==========
- * Table was not previously encrypted but now is
- * - install hooks
- * - update any existing records encrypting them as we go
+ * Table was previously not encrypted but now is
  *
- * Scenario 3
+ * SCENARIO_TABLE_UNENCRYPTED_CHANGE
  * ==========
  * Table was previously encrypted but now is not
- * - update any existing records decrypting them as we go
  *
- * Scenario 4
+ * SCENARIO_TABLE_ENCRYPTED_NO_CHANGE
  * ==========
  * Table was previously encrypted and still is
- * - install hooks
  *
  * @param table
  * @param tables
@@ -125,21 +119,20 @@ export const setupHooks = async (table, encryption) => {
  */
 export const selectTableScenario = (table, tables, previousTables) => {
   if (table.name === ENCRYPTION_SETTINGS_TABLE) {
-    return SCENARIO_5;
+    return SCENARIO_TABLE_IS_SETTINGS_TABLE;
   }
   if (!previousTables.includes(table.name) && !tables.includes(table.name)) {
-    return SCENARIO_1;
+    return SCENARIO_TABLE_UNENCRYPTED_NO_CHANGE;
   }
   if (!previousTables.includes(table.name) && tables.includes(table.name)) {
-    return SCENARIO_2;
+    return SCENARIO_TABLE_UNENCRYPTED_CHANGE;
   }
   if (previousTables.includes(table.name) && !tables.includes(table.name)) {
-    return SCENARIO_3;
+    return SCENARIO_TABLE_ENCRYPTED_CHANGE;
   }
   if (previousTables.includes(table.name) && tables.includes(table.name)) {
-    return SCENARIO_4;
+    return SCENARIO_TABLE_ENCRYPTED_NO_CHANGE;
   }
-
   return null;
 };
 

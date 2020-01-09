@@ -78,7 +78,7 @@ describe('Middleware', () => {
   });
 });
 
-describe.skip('Fails', () => {
+describe('Fails', () => {
   it('When adding middleware to open db', async () => {
     try {
       const db = new Dexie('open-then-add-middleware');
