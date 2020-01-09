@@ -1,6 +1,6 @@
 # dexie-easy-encrypt
 
-Easy, unopinionated table encryption middleware for Dexie
+Easy, unopinionated, table encryption middleware for Dexie
 
 [![npm version](https://badge.fury.io/js/dexie-easy-encrypt.svg)](https://badge.fury.io/js/dexie-easy-encrypt)
 
