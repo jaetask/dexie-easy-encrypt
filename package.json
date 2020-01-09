@@ -14,7 +14,11 @@
     "push": "npm version patch && npm publish"
   },
   "keywords": [
-    "dexie"
+    "dexie",
+    "dexiejs",
+    "indexeddb",
+    "encryption",
+    "encryption/decryption"
   ],
   "devDependencies": {
     "@babel/core": "^7.5.5",
