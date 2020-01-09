@@ -11,7 +11,7 @@
     "test-ci": "jest",
     "build": "rollup index.js --format commonjs --file dist/index.js --external=dexie",
     "format": "prettier index.js README.md --write",
-    "publish": "npm version patch && npm publish"
+    "push": "npm version patch && npm publish"
   },
   "keywords": [
     "dexie"
