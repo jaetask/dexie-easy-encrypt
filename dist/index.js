@@ -21,10 +21,11 @@ const makeError = err => `dexie-easy-encrypt: ${err}`;
 const overrideParseStoresSpec = db => {
   db.Version.prototype._parseStoresSpec = Dexie.override(
     db.Version.prototype._parseStoresSpec,
-    func => (stores, dbSchema) => {
-      stores[ENCRYPTION_SETTINGS_TABLE] = '++id';
-      func.call(undefined, stores, dbSchema);
-    }
+    func =>
+      function(stores, dbSchema) {
+        stores[ENCRYPTION_SETTINGS_TABLE] = '++id';
+        func.call(this, stores, dbSchema);
+      }
   );
 };
 

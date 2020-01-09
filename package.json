@@ -9,7 +9,7 @@
   "scripts": {
     "test": "jest --watch",
     "test-ci": "jest",
-    "build": "rollup index.js --format commonjs --file dist/index.js",
+    "build": "rollup index.js --format commonjs --file dist/index.js --external=dexie",
     "format": "prettier index.js README.md --write"
   },
   "keywords": [
