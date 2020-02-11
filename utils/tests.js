@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import middleware from '../index';
 
 /**
- * Initialise our tests with a common set of read/write and raw db connections
+ * Initialise our tests with a common set of read, write and raw connections
  * @param dbName
  * @param encryption
  * @param tables
@@ -40,7 +40,7 @@ export const init = async (dbName, encryption, tables, schema) => {
  * @returns {Promise<[T1, T1, T1, T1, T1, T1, T1, T1, T1, T1]>}
  */
 export const clearAllTables = async db =>
-  Promise.all(
+  Dexie.Promise.all(
     db.tables.map(function(table) {
       return table.clear();
     })

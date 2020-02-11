@@ -1,8 +1,6 @@
 'use strict';
 
-function _interopDefault(ex) {
-  return ex && typeof ex === 'object' && 'default' in ex ? ex['default'] : ex;
-}
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var Dexie = _interopDefault(require('dexie'));
 
@@ -52,49 +50,12 @@ const isDatabaseAlreadyOpen = db => {
  * @returns {void | Dexie.Table<any, any>}
  * @throws ERROR_ENCRYPTION_TABLE_NOT_FOUND
  */
-const getEncryptionSettingsTable = async db => {
+const getEncryptionSettingsTable = db => {
   try {
     return db.table(ENCRYPTION_SETTINGS_TABLE);
   } catch (error) {
     throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
   }
-};
-
-/**
- * Sets up the table hooks for a table that will be encrypted
- * @param table
- * @param encryption
- */
-const setupHooks = async (table, encryption) => {
-  table.hook('creating', (primKey, obj) => {
-    encryptObject(table, obj, encryption);
-  });
-
-  table.hook('updating', (modifications, primKey, obj) => {
-    // do we have any modifications?
-    const modificationKeys = Object.keys(modifications).filter(x => x !== ENCRYPTED_DATA_KEY);
-    if (modificationKeys.length === 0) {
-      return undefined;
-    }
-
-    // decrypt the original object
-    const decrypted = decryptObject({ ...obj }, encryption);
-
-    // merge the modifications into the original object
-    const updates = {
-      ...decrypted,
-      ...modifications,
-    };
-
-    // encrypt the new object (must not modify passed params)
-    // wipe keys to undefined instead of deleting from object, which dexie uses to
-    // remove them from the modifications object
-
-    encryptObject(table, updates, encryption, true);
-
-    return updates;
-  });
-  table.hook('reading', obj => decryptObject(obj, encryption));
 };
 
 /**
@@ -156,7 +117,7 @@ const selectTableScenario = (table, tables, previousTables) => {
  * @param encryption
  * @param wipeKeys
  */
-const encryptObject = async (table, entity, encryption, wipeKeys = false) => {
+const encryptObject = (table, entity, encryption, wipeKeys = false) => {
   const toStore = Object.assign({}, entity);
 
   const indices = table.schema.indexes.map(index => index.name);
@@ -199,6 +160,50 @@ function decryptObject(entity, encryption, wipeKeys = false) {
   return entity;
 }
 
+/**
+ * Sets up the table hooks for a table that will be encrypted
+ * @param table
+ * @param encryption
+ */
+const setupHooks = (table, encryption) => {
+  console.log('Installing hooks for', table.name);
+  table.hook('creating', (primKey, obj) => {
+    // const original = clone(obj);
+    encryptObject(table, obj, encryption);
+    // table.onsuccess = () => {
+    //   console.log('creating.success', primKey, obj);
+    //   // delete obj.__encryptedData;
+    //   // Object.assign(obj, preservedValue);
+    // };
+  });
+
+  table.hook('updating', (modifications, primKey, obj) => {
+    // do we have any modifications?
+    const modificationKeys = Object.keys(modifications).filter(x => x !== ENCRYPTED_DATA_KEY);
+    if (modificationKeys.length === 0) {
+      return undefined;
+    }
+
+    // decrypt the original object
+    const decrypted = decryptObject({ ...obj }, encryption);
+
+    // merge the modifications into the original object
+    const updates = {
+      ...decrypted,
+      ...modifications,
+    };
+
+    // encrypt the new object (must not modify passed params)
+    // wipe keys to undefined instead of deleting from object, which dexie uses to
+    // remove them from the modifications object
+
+    encryptObject(table, updates, encryption, true);
+
+    return updates;
+  });
+  table.hook('reading', obj => decryptObject(obj, encryption));
+};
+
 const Promise = Dexie.Promise;
 
 /**
@@ -208,58 +213,50 @@ const Promise = Dexie.Promise;
  * @param tables []
  * @returns {Promise<void>}
  */
-const middleware = async ({ db, encryption = null, tables = [] }) => {
+const middleware = ({ db, encryption = null, tables = [] }) => {
+  console.log('Installing middleware');
   overrideParseStoresSpec(db);
-  await isDatabaseAlreadyOpen(db);
+  isDatabaseAlreadyOpen(db);
 
-  db.on('ready', async () => {
-    return Promise.resolve().then(async () => {
-      const settingsTable = await getEncryptionSettingsTable(db);
-      settingsTable
-        .toCollection()
-        .last()
-        .then(previousSettings => {
-          const previousTables =
-            previousSettings && Array.isArray(previousSettings.tables) ? previousSettings.tables : [];
+  db.on('ready', () => {
+    Promise.resolve().then(() => {
+      const settingsTable = getEncryptionSettingsTable(db);
+      return Promise.resolve().then(() => {
+        settingsTable
+          .toCollection()
+          .last()
+          .then(previousSettings => {
+            const previousTables =
+              previousSettings && Array.isArray(previousSettings.tables) ? previousSettings.tables : [];
 
-          Promise.resolve().then(() =>
-            Promise.all(
-              db.tables.map(table => {
-                const scenario = selectTableScenario(table, tables, previousTables);
-                switch (scenario) {
-                  case SCENARIO_TABLE_UNENCRYPTED_CHANGE: {
-                    return table
-                      .toCollection()
-                      .modify(function(entity, ref) {
-                        ref.value = encryptObject(table, entity, encryption);
-                        return true;
-                      })
-                      .then(() => setupHooks(table, encryption));
+            return Promise.resolve().then(() =>
+              Promise.all(
+                db.tables.map(table => {
+                  const scenario = selectTableScenario(table, tables, previousTables);
+                  switch (scenario) {
+                    case SCENARIO_TABLE_UNENCRYPTED_CHANGE: {
+                      setupHooks(table, encryption);
+                      return Promise.resolve();
+                    }
+                    case SCENARIO_TABLE_ENCRYPTED_NO_CHANGE: {
+                      setupHooks(table, encryption);
+                      return Promise.resolve();
+                    }
                   }
-                  case SCENARIO_TABLE_ENCRYPTED_CHANGE: {
-                    return table.toCollection().modify(function(entity, ref) {
-                      ref.value = decryptObject(table, entity, encryption);
-                      return true;
-                    });
-                  }
-                  case SCENARIO_TABLE_ENCRYPTED_NO_CHANGE: {
-                    setupHooks(table, encryption);
-                    break;
-                  }
-                }
-                return Promise.resolve();
-              })
-            )
-          );
-        })
-        .then(() => settingsTable.clear())
-        .then(() => settingsTable.put({ tables }))
-        .catch(error => {
-          if (error.name === 'NotFoundError') {
-            throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
-          }
-          return Promise.reject(error);
-        });
+                  return Promise.resolve();
+                })
+              )
+            );
+          })
+          .then(() => settingsTable.clear())
+          .then(() => settingsTable.put({ tables }))
+          .catch(error => {
+            if (error.name === 'NotFoundError') {
+              throw new Error(makeError(ERROR_ENCRYPTION_TABLE_NOT_FOUND));
+            }
+            return Promise.reject(error);
+          });
+      });
     });
   });
 };

@@ -22,14 +22,16 @@ Call the middleware before opening the db
 
 
 ```js
-import encryption from './encryption' // see example below
+import {encryption} from './encryption' // see example below
 
 const db = new Dexie('DatabaseName');
-middleware({ db, encryption, tables: ['friends'] });
-db.version(1).stores({
-  friends: '++id, name, age',
-});
-db.open();
+const tables = ['friends']
+
+middleware({ db, encryption, tables }).then(() => {
+  db.version(1).stores({
+    friends: '++id, name, age',
+  });
+})
 ```
 
 

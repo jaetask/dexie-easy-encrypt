@@ -43,7 +43,7 @@ describe('Middleware', () => {
     });
   });
   describe('Encrypted tables', () => {
-    describe('Stored raw values', () => {
+    describe('Write', () => {
       it('Write object keeps index keys', async done => {
         await db.write.friends.add(clone(camila));
         const data = await db.raw.table('friends').get({ name: camila.name });
@@ -72,6 +72,27 @@ describe('Middleware', () => {
         expect(decrypted.name).toEqual(camila.name);
         expect(decrypted.picture).toEqual(camila.picture);
         expect(decrypted.street).toEqual(camila.street);
+        done();
+      });
+    });
+    describe('Update', () => {
+      it('Updated object has correct encrypted data', async done => {
+        const newStreet = '123 my changed address';
+        // add an object via middleware
+        await db.write.friends.add(clone(camila));
+        const original = await db.raw.table('friends').get({ name: camila.name });
+        expect(original).toHaveProperty('id');
+
+        // update it via middleware
+        await db.write.friends.update(original.id, { street: newStreet });
+        const updated = await db.raw.table('friends').get(original.id);
+        expect(updated).not.toHaveProperty('picture');
+
+        // read the raw values, decrypt them and check the updates match what we expect
+        const decrypted = encryption.decrypt(updated[ENCRYPTED_DATA_KEY]);
+        expect(decrypted).toHaveProperty('street');
+        expect(decrypted.street).not.toEqual(camila.street);
+        expect(decrypted.street).toEqual(newStreet);
         done();
       });
     });
