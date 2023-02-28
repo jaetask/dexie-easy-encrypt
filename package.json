@@ -40,7 +40,7 @@
     "sjcl": "^1.0.8"
   },
   "peerDependencies": {
-    "dexie": "^2.0.4 | ^3.0.0"
+    "dexie": "^2.0.4 || ^3.0.0"
   },
   "author": "Jae Task",
   "license": "ISC",
